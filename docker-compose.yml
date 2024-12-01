@@ -9,17 +9,29 @@ services:
       - POSTGRES_PASSWORD=kestra
     volumes:
       - postgresql-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U kestra" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.6
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'" ]
+      interval: 20s
+      timeout: 10s
+      retries: 5
 
   kestra:
     image: kestra/kestra:latest
+    command: server standalone
     ports:
       - "8080:8080"
     volumes:
@@ -28,16 +40,32 @@ services:
       - ./flows:/home/kestra/flows
       - ./federated_learning:/home/kestra/federated_learning
     environment:
-      - |
-        KESTRA_CONFIGURATION=
-        database:
-          type: postgres
-          url: jdbc:postgresql://postgresql:5432/kestra
-          driverClassName: org.postgresql.Driver
-          user: kestra
-          password: kestra
+      KESTRA_CONFIGURATION: |
+        kestra:
+          repository:
+            type: postgres
+          queue:
+            type: postgres
+          storage:
+            type: local
+            local:
+              base-path: "/tmp/storage"
+          url: http://localhost:8080
+        datasources:
+          postgres:
+            url: jdbc:postgresql://postgresql:5432/kestra
+            driverClassName: org.postgresql.Driver
+            username: kestra
+            password: kestra
         elasticsearch:
-          host: elasticsearch
+          client:
+            http:
+              urls: http://elasticsearch:9200
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
 
   federated-learning:
     build:
@@ -47,6 +75,9 @@ services:
       - ./results:/app/results
       - ./logs:/app/logs
       - ./outputs:/app/outputs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - kestra
 
 volumes:
   postgresql-data:

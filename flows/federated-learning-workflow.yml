@@ -1,27 +1,30 @@
-id: federated-learning-workflow
-namespace: credit.scoring
+id: federated_learning_workflow
+namespace: credit_scoring_002
 
 tasks:
-  - id: build-federated-learning-image
-    type: io.kestra.core.tasks.docker.DockerBuild
-    image: federated-learning
-    dockerfile: Dockerfile
+  - id: run_federated_learning
+    type: io.kestra.plugin.scripts.python.Script
+    docker:
+      image: "federated-learning-1" # Specifies your Docker service
+    inputFiles:
+      federated_learning/main.py: |
+        # Your main.py file content directly here
+        import os
+        import sys
+        sys.path.append(os.getcwd())
 
-  - id: run-federated-learning
-    type: io.kestra.core.tasks.docker.DockerRun
-    image: federated-learning
-    volumes:
-      - ./results:/app/results
-      - ./logs:/app/logs
-      - ./outputs:/app/outputs
-    environments:
-      - NUM_INSTITUTIONS=50
-      - NUM_SAMPLES=5000
-      - RANDOM_SEED=42
+        from main import main
 
-flows:
-  - id: federated-learning-pipeline
-    namespace: credit.scoring
-    tasks:
-      - build-federated-learning-image
-      - run-federated-learning
+        if __name__ == '__main__':
+            main()
+    script: |
+      python federated_learning/main.py
+    env:
+      NUM_INSTITUTIONS: "5"
+      NUM_SAMPLES: "1000"
+      RANDOM_SEED: "42"
+
+triggers:
+  - id: schedule
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 0 * * *" # Run daily at midnight

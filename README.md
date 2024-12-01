@@ -1,7 +1,5 @@
 # Federated Credit Scoring with Kestra
 
-## Project Setup
-
 ### Prerequisites
 - Docker
 - Docker Compose
