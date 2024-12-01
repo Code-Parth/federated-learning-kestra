@@ -139,11 +139,16 @@ def run_federated_learning(
 def main():
     """Main entry point for the federated learning workflow."""
     try:
-        # Run federated learning
+        # Read configuration from environment variables
+        num_institutions = int(os.getenv('NUM_INSTITUTIONS', 50))
+        num_samples = int(os.getenv('NUM_SAMPLES', 5000))
+        random_seed = int(os.getenv('RANDOM_SEED', 42))
+        
+        # Run federated learning with configurable parameters
         global_model = run_federated_learning(
-            num_institutions=50,   # Configurable number of institutions
-            num_samples=5000,     # Configurable number of samples
-            random_seed=42        # Reproducibility seed
+            num_institutions=num_institutions,
+            num_samples=num_samples,
+            random_seed=random_seed
         )
         
         # Print global model details

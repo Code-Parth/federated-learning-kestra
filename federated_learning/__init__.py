@@ -1,6 +1,7 @@
-from federated_learning.data_generator import DataGenerator
-from federated_learning.local_model import LocalModel
-from federated_learning.aggregator import ModelAggregator
+from .data_generator import DataGenerator
+from .local_model import LocalModel
+from .aggregator import ModelAggregator
+from .main import run_federated_learning
 import numpy as np
 
 def run_federated_learning(num_institutions=5):

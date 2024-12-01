@@ -1,0 +1,53 @@
+version: "3.8"
+
+services:
+  postgresql:
+    image: postgres:14
+    environment:
+      - POSTGRES_DB=kestra
+      - POSTGRES_USER=kestra
+      - POSTGRES_PASSWORD=kestra
+    volumes:
+      - postgresql-data:/var/lib/postgresql/data
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.6
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+
+  kestra:
+    image: kestra/kestra:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ~/.kestra:/home/kestra/.kestra
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./flows:/home/kestra/flows
+      - ./federated_learning:/home/kestra/federated_learning
+    environment:
+      - |
+        KESTRA_CONFIGURATION=
+        database:
+          type: postgres
+          url: jdbc:postgresql://postgresql:5432/kestra
+          driverClassName: org.postgresql.Driver
+          user: kestra
+          password: kestra
+        elasticsearch:
+          host: elasticsearch
+
+  federated-learning:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./results:/app/results
+      - ./logs:/app/logs
+      - ./outputs:/app/outputs
+
+volumes:
+  postgresql-data:
+  elasticsearch-data:

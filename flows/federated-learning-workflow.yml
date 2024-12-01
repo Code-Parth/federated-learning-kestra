@@ -1,0 +1,27 @@
+id: federated-learning-workflow
+namespace: credit.scoring
+
+tasks:
+  - id: build-federated-learning-image
+    type: io.kestra.core.tasks.docker.DockerBuild
+    image: federated-learning
+    dockerfile: Dockerfile
+
+  - id: run-federated-learning
+    type: io.kestra.core.tasks.docker.DockerRun
+    image: federated-learning
+    volumes:
+      - ./results:/app/results
+      - ./logs:/app/logs
+      - ./outputs:/app/outputs
+    environments:
+      - NUM_INSTITUTIONS=50
+      - NUM_SAMPLES=5000
+      - RANDOM_SEED=42
+
+flows:
+  - id: federated-learning-pipeline
+    namespace: credit.scoring
+    tasks:
+      - build-federated-learning-image
+      - run-federated-learning
