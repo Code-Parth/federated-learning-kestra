@@ -1,5 +1,10 @@
 # Federated Credit Scoring with Kestra
 
+### architecture
+
+![image](https://github.com/user-attachments/assets/dc80cd80-2c20-4858-8d9b-cfea2894f3b1)
+
+
 ### Prerequisites
 - Docker
 - Docker Compose
